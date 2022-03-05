@@ -1,25 +1,46 @@
-import logo from './logo.svg';
+import { Suspense } from 'react'
+
 import './App.css';
+import graphql from 'babel-plugin-relay/macro';
+import {
+  loadQuery,
+  usePreloadedQuery,
+  RelayEnvironmentProvider
+} from 'react-relay/hooks';
+import RelayEnvironment from './RelayEnvironment';
+
+const RepositoryNameQuery = graphql`
+  query AppRepositoryNameQuery {
+    repository(owner: "facebook", name: "relay") {
+      name
+    }
+  }
+`;
+
+const preloadedQuery = loadQuery(RelayEnvironment, RepositoryNameQuery, {
+  /* query variables */
+});
 
 function App() {
+  const data = usePreloadedQuery(RepositoryNameQuery, preloadedQuery);
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <p>Repository: {data.repository.name}</p>
       </header>
     </div>
   );
 }
 
-export default App;
+function AppRoot() {
+  return (
+    <RelayEnvironmentProvider environment={RelayEnvironment}>
+      <Suspense fallback={'Loading...'}>
+        <App />
+      </Suspense>
+    </RelayEnvironmentProvider>
+  );
+}
+
+export default AppRoot;
